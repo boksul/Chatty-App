@@ -5,7 +5,7 @@ class Message extends Component {
         return (
             <main className="messages">
                 <div className="message system">
-                    Anonymous changed their name to nomnom.
+
                 </div>
             </main>
         )
