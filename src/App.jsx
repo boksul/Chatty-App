@@ -2,42 +2,32 @@ import React, {Component} from 'react';
 import ChatBar from './ChatBar.jsx';
 import Message from './Message.jsx';
 import MessageList from './MessageList.jsx';
-
+const socket = new WebSocket("ws://localhost:3001");
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
       currentUser: {name: "bob"},
-      messages: [
-        {
-          username: "bob",
-          content: "Has anyone seen my marbles?"
-        },
-        {
-          username: "anonymous",
-          content: "No, i think you lost them. You lost your marbles Bob. You lost them for good."
-        }
-      ]
+      messages: []
     }
-    this.addChat = this.addChat.bind(this);
+
+    this.socket = socket;
+    this.addText = this.addText.bind(this);
   }
 
-  addChat(newText) {
-    const previousMessages = this.state.messages;
-    const newMessage = {
-      username: this.state.currentUser.name,
-      content: newText
-    }
-    const allMessage = previousMessages.concat(newMessage)
-    this.setState({
-      messages: allMessage
-    })
-  }
+  componentDidMount() {
+    console.log("componentDidMount <App />");
+    this.socket.onmessage = (event) => {
+      console.log(event)
+      console.log(JSON.parse(event.data));
 
-componentDidMount() {
-  console.log("componentDidMount <App />");
-  setTimeout(() => {
+      this.setState({
+        messages: this.state.messages.concat(JSON.parse(e.data))
+      })
+    }
+
+    setTimeout(() => {
     console.log("Simulating incoming message");
     // Add a new message to the list of messages in the data store
     const newMessage = {id: 3, username: "Michelle", content: "Hello there!"}
@@ -46,8 +36,15 @@ componentDidMount() {
     // Calling setState will trigger a call to render() in App and all child components.
     this.setState({messages: messages})
   }, 3000);
-}
+  }
 
+  addText(newText) {
+    const newMessage = {
+      username: this.state.currentUser.name,
+      content: newText
+    }
+    this.socket.send(JSON.stringify(newMessage));
+  }
   render() {
     return (
       <div>
@@ -56,7 +53,7 @@ componentDidMount() {
         </nav>
         <MessageList messages={this.state.messages} />
         <Message user={this.state.currentUser} messages={this.state.messages} />
-        <ChatBar user={this.state.currentUser} addChat={this.addChat} userInputName={this.userInputName} />
+        <ChatBar user={this.state.currentUser} addText={this.addText} userInputName={this.userInputName} />
       </div>
 
     );

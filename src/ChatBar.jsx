@@ -7,9 +7,13 @@ class ChatBar extends Component {
     const newText = (e) => {
       e.preventDefault();
       if (e.key === 'Enter') {
-        this.props.addChat(e.target.value)
+        this.props.addText(e.target.value)
         e.target.value = '';
       }
+    }
+    const newUser = (e) => {
+        e.preventDefault();
+        this.props.addNewUser(e.target.value)
     }
     return (
     <footer className="chatbar">
