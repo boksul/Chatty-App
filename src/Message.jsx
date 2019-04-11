@@ -5,7 +5,6 @@ class Message extends Component {
         return (
             <main className="messages">
                 <div className="message system">
-
                 </div>
             </main>
         )
