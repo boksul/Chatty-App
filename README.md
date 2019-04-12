@@ -17,7 +17,7 @@ open http://localhost:3000
 
 ```
 ### Screen Shoots
-https://github.com/boksul/Chatty-App/blob/master/img/Screen%20Shot%202019-04-12%20at%201.18.52%20AM.png
+!["multi screen"](https://github.com/boksul/Chatty-App/blob/master/img/Screen%20Shot%202019-04-12%20at%201.18.52%20AM.png)
 ```
 
 ### Static Files
