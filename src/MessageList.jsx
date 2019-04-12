@@ -1,21 +1,30 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
+import Message from './Message.jsx';
+import Notification from './Notification.jsx';
 
+// send information do message to display to the user
 class MessageList extends Component {
-    render() {
-        const message = this.props.messages.map((message, i) =>
-            <p key={i}>{message.content} </p>
+  render() {
+    return (
+      
+      <main className="messages">
+        {
+          this.props.messages.map( message => {
+            if (message.type === 'incomingNotification') {
+              return <Notification key={message.id}
+              chattyUsernameColor={message.color}
+              content={message.content}/>
+            } else {
+              return <Message key={message.id}
+              chattyUsername={message.username}
+              chattyUsernameColor={message.color}
+              chattyMessage={message.content}/>
+            }
+          })
+        }
+        </main>
         );
-        const user = this.props.messages.map((user, i) =>
-            <p key={i}>{user.username}</p>
-        );
-
-        return(
-            <div className="message">
-                <span className="message-username">{user}</span>
-                <span className="message-content">{message}</span>
-            </div>
-        )
-    }
-}
+      }
+  }
 
 export default MessageList;

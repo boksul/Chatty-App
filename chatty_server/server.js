@@ -1,6 +1,7 @@
-const uuidv1 = require('uuid/v1');
+// server.js
 const express = require('express');
 const SocketServer = require('ws').Server;
+const uuid = require('uuid');
 
 // Set the port to 3001
 const PORT = 3001;
@@ -14,38 +15,54 @@ const server = express()
 // Create the WebSockets server
 const wss = new SocketServer({ server });
 
+// Variable to count users into the system
+var onlineUsers = wss.clients.size;
+
+wss.broadcast = function broadcast(data) {
+    wss.clients.forEach(user => {
+        user.send(JSON.stringify(data));
+        onlineUsers = wss.clients.size;
+        console.log('Message sent from user to server');
+    });
+};
+
 // Set up a callback that will run when a client connects to the server
 // When a client connects they are assigned a socket, represented by
 // the ws parameter in the callback.
-wss.broadcast = function broadcast(data) {
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === ws.OPEN) {
-        client.send(data);
-      }
-    });
-  };
-
-
 wss.on('connection', (ws) => {
   console.log('Client connected');
-    ws.on('message', function incoming(data){
-        const parsedData = JSON.parse(data);
-        parsedData.id = uuidv1();
-        // ws.send(JSON.stringify(parsedData))
+  
+  ws.on('message', (ws) => {
+    console.log('received message:', JSON.parse(ws));
+    const userMessage = JSON.parse(ws);
 
-        wss.clients.forEach(function each(client) {
-
-            if (client.readyState === ws.OPEN) {
-              client.send(JSON.stringify(parsedData));
-            }
-        })
-        // console.log(`User ${JSON.parse(data).username} said ${JSON.parse(data).content}`);
-
-
-
-
-    })
-
+    switch(userMessage.message.type) {
+        case "postNotification": {
+            wss.broadcast({
+                id: uuid.v4(),
+                ...userMessage.message,
+                type: "IncomingNotification",
+                onlineUsers
+            });
+            break;
+        }
+        case "postMessage": {
+            wss.broadcast({
+                id: uuid.v4(),
+                ...userMessage.message,
+                type: "IncomingMessage",
+                onlineUsers
+            });
+            break;
+        }
+        default:
+          throw new Error(`Event type undefined ${userMessage.message.type}`);
+    }
+  });
+  
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
-  ws.on('close', () => console.log('Client disconnected'));
-})
+  ws.on('close', () => {
+      console.log('Client disconnected');
+      wss.broadcast(onlineUsers);
+  });
+});

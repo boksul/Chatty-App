@@ -1,81 +1,104 @@
-import React, {Component} from 'react';
-import ChatBar from './ChatBar.jsx';
-import Message from './Message.jsx';
+import React, { Component } from 'react';
 import MessageList from './MessageList.jsx';
-const socket = new WebSocket("ws://localhost:3001");
+import ChatBar from './ChatBar.jsx';
 
+const chattyData = {
+  currentUser: {
+    name: "Anonymous",
+    color: "#a3fd7f"
+  }, // optional. if currentUser is not defined, it means the user is Anonymous
+  messages: []
+}
+
+var usersOnLine = 0;
+
+// Generate a random color for username
+function getRandomColor() {
+  return '#'+Math.random().toString(16).substr(-6);
+};
+
+var newColor = getRandomColor();
 
 class App extends Component {
+
+  // Set initial state so the component is initially "loading"
   constructor(props) {
     super(props);
-    this.state = {
-      currentUser: {name: "bob"},
-      messages: []
-    }
-    this.socket = socket;
-    this.addText = this.addText.bind(this);
-    this.addNewUser = this.addNewUser.bind(this);
 
+    this.addMessage = this.addMessage.bind(this);
+    this.state = chattyData;
+
+    this.userMessage = this.userMessage.bind(this);
+    this.componentDidMount = this.componentDidMount.bind(this);
+    this.WSconn = new WebSocket("ws://localhost:3001");
   }
-
 
   componentDidMount() {
-    console.log("componentDidMount <App />");
-
-    this.socket.onmessage = (e) => {
-      console.log(e)
-      console.log(JSON.parse(e.data));
-
-      this.setState({
-        messages: this.state.messages.concat(JSON.parse(e.data))
-      })
-
+    this.WSconn.onopen = (event) => {
+      console.log('Connected to server');
+      usersOnLine = chattyData.onlineUsers;
     }
 
+    this.WSconn.onmessage = (event) => {
+      const chattyDataArray = [];
+      const chattyData = JSON.parse(event.data);
 
+      usersOnLine = chattyData.onlineUsers;
 
-    setTimeout(() => {
-    console.log("Simulating incoming message");
-    // Add a new message to the list of messages in the data store
-    const newMessage = {id: 3, username: "Michelle", content: "Hello there!"};
-    const messages = this.state.messages.concat(newMessage)
-    // Update the state of the app component.
-    // Calling setState will trigger a call to render() in App and all child components.
-    this.setState({messages: messages})
-  }, 3000);
-  }
-
-
-  addNewUser(newUser) {
-    const addedUser = {
-      name: newUser
+      switch(chattyData.type) {
+        case "IncomingMessage": {
+          this.setState({
+            messages: this.state.messages.concat(chattyData)
+          })
+        }
+          break;
+        case "IncomingNotification": {
+          this.setState({
+            messages: this.state.messages.concat(chattyData)
+          })
+        }
+          break;
+        default:
+          throw new Error("Unknown event type " + chattyData.message.type);
+      }
+      this.setState({messages: this.state.messages.concat(chattyDataArray)});
     }
-    this.setState({
-      currentUser: addedUser
-    })
   }
-  addText(newText) {
 
-    const newMessage = {
-      username: this.state.currentUser.name,
-      content: newText
+  // receive a nwq message from user
+  userMessage(message) {
+    this.WSconn.send(JSON.stringify(message));
+    console.log("message from user",message);
+  }
+
+  // Add a new message in system
+  addMessage = (message) => {
+    if(this.state.currentUser.name !== message.username) {
+      const notification = {type:"postNotification", content: `${this.state.currentUser.name} changed their name to ${message.username}`};
+      this.state.currentUser.name = message.username;
+      this.userMessage({message: notification});
     }
-    this.socket.send(JSON.stringify(newMessage));
+    const newMessage = {type: "postMessage", username: message.username, content: message.content, color: newColor};
+    this.userMessage({message: newMessage});
   }
-
 
   render() {
-    return (
-      <div>
-        <nav className="navbar">
-          <a href="/" className="navbar-brand">Chatty</a>
-        </nav>
-        <MessageList messages={this.state.messages} />
-        <Message user={this.state.currentUser} messages={this.state.messages} />
-        <ChatBar user={this.state.currentUser} addText={this.addText} addNewUser={this.addNewUser}/>
-      </div>
-
-    );
+      return (
+        <div>
+          <nav className="navbar">
+            <a href="/" className="navbar-brand">Chatty App</a>
+            {
+              usersOnLine ? <a className="navbar-brand"> {usersOnLine} users online</a> : <a className="navbar-brand"> 0 users online</a>
+            }
+          </nav>
+          <MessageList messages={this.state.messages}
+          users={this.state.users}/>
+          <ChatBar addMessage={this.addMessage}
+           currentUser={this.state.currentUser}
+           />
+        </div>
+        );
   }
 }
+
 export default App;

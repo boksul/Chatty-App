@@ -2,17 +2,16 @@ h1 {
   color: tomato;
 }
 
-
 body {
-  background: white;
-  color: black;
+  background: #3E4347;
+  color: white;
   font-family: 'Open Sans', sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   margin: 70px 0;
-    }
+}
 
 .chatbar {
-  background: tomato;
+  background: #3E4347;
   border-top: 1px solid black;
   bottom: 0;
   display: flex;
@@ -67,6 +66,8 @@ body {
 }
 
 .navbar {
+  display: flex;
+  justify-content: space-between;
   background: tomato;
   border-bottom: 1px solid black;
   height: 60px;
